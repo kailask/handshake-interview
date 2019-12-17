@@ -8,10 +8,11 @@
 <body>
     <h1>Chirps</h1>
     <ul>
-        <% chrips.forEach(function(chirp){ %>
+        <% chirps.forEach(function(chirp){ %>
         <li>
             <%= chirp.text %>
-            <button class="vote_btn" onclick="upvote(this)" name=<%=chirp.id%>>Upvote</button>
+            <button class="up_btn" onclick="upvote(this)" name=<%=chirp.id%>>Up</button>
+            <button class="down_btn" onclick="downvote(this)" name=<%=chirp.id%>>Down</button>
             Votes: <%= chirp.votes %>
         </li>
         <% }); %>

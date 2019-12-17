@@ -3,8 +3,11 @@ const axios = require('axios')
 const app = express()
 const port = 3000
 
+var mongo = require('mongodb')
+var ObjectId = mongo.ObjectID;
+
 //Connect Mongo client
-var MongoClient = require('mongodb').MongoClient;
+var MongoClient = mongo.MongoClient;
 var db = null;
 
 //id of last posted chirp
@@ -35,17 +38,17 @@ app.get('/index', (req, res) => {
     if (db == null) res.send("Error: Unable to reach database");
 
     //find all chrips sorting by largest id
-    db.collection(CHIRPS).find({}).sort({ 'id': -1 }).toArray(function (err, result) {
+    db.collection(CHIRPS).find({}).sort({ votes: -1, _id: -1 }).toArray(function (err, result) {
         if (err) throw err
 
         var chirps = [];
         //push chrips to array
         result.forEach(chirp => {
-            chirps.push({text:`${chirp.id} -- ${chirp.text.toUpperCase()}`,votes:chirp.votes, id:chirp.id});
+            chirps.push({ text: `${chirp.text.toUpperCase()}`, votes: chirp.votes, id: chirp._id });
         });
 
         //return template page with filled data
-        res.render('index.ejs', { chrips: chirps });
+        res.render('index.ejs', { chirps: chirps });
     });
 });
 
@@ -55,16 +58,19 @@ app.post('/post', (req, res) => {
     console.log(req.body);
 
     //add new chrip to database
-    db.collection(CHIRPS).insertOne({ id: ++LAST_CHIRP_ID, text: req.body.chirp, votes: 0 });
+    db.collection(CHIRPS).insertOne({ text: req.body.chirp, votes: 0 }, function (err, insertedobj) {
+
+        axios.post('https://bellbird.joinhandshake-internal.com/push', {
+            chirp_id: insertedobj.insertedId
+        }).then((res) => {
+            console.log(`statusCode: ${res.statusText}`)
+        })
+    });
 
     res.send("success");
 
     //push notification to all users
-    axios.post('https://bellbird.joinhandshake-internal.com/push', {
-        chirp_id: LAST_CHIRP_ID
-    }).then((res) => {
-        console.log(`statusCode: ${res.statusText}`)
-    })
+
 });
 
 app.post('/vote', (req, res) => {
@@ -73,7 +79,7 @@ app.post('/vote', (req, res) => {
     console.log(req.body);
 
     //update chirp with desired id
-    db.collection(CHIRPS).updateOne({id:req.body.id}, {$inc:{votes:1}}, function(err, res) {
+    db.collection(CHIRPS).updateOne({ _id: new ObjectId(req.body.id) }, { $inc: { votes: req.body.vote } }, function (err, res) {
         if (err) console.log(err);
         // console.log(res);
         console.log("document updated");
