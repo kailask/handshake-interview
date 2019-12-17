@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <h1>Chirps</h1>
+    <ul>
+        <% chrips.forEach(function(chirp){ %>
+        <li>
+            <%= chirp.text %>
+            <button class="vote_btn" onclick="upvote(this)" name=<%=chirp.id%>>Upvote</button>
+            Votes: <%= chirp.votes %>
+        </li>
+        <% }); %>
+    </ul>
+    <div>
+        <input type="text" name="chirp" id="new_chirp">
+        <button id="post_btn">Post</button>
+    </div>
+</body>
+<script src="main.js"></script>
+
+</html>
